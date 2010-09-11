@@ -5,7 +5,19 @@
 #include <getopt.h>
 #include "nvram.h"
 
-/*int print_env() {
+int print_entries(struct nvram_entry *entries) {
+	int i;
+
+	printf("NAME               OFFSET          SIZE\n");
+	printf("------------------------------------------\n");
+	for (i=0; i<MAX_ENTRIES; i++) {
+		if (!strncmp(entries[i].magic, ENTRY_MAGIC, MAGIC_LEN)) {
+			printf("%-16s %#.8x     %#.8x\n", entries[i].name, entries[i].offset, entries[i].size);
+		}
+	}
+}
+
+int print_env(char *environment, uint32_t size) {
 	char *env = NULL, *nxt = NULL;
 
 	if (!environment) {
@@ -15,7 +27,7 @@
 
 	for (env = environment; *env; env = nxt + 1) {
 		for (nxt = env; *nxt; nxt++) {
-			if (nxt >= &env[env_size]) {
+			if (nxt >= size) {
 				fprintf(stderr, "## Error: environment not terminated\n");
 				return -1;
 			}
@@ -30,103 +42,66 @@
 	}
 
 	return 0;
-}*/
-
-/*int print_entries() {
-	int i;
-
-	printf("NAME               OFFSET          SIZE\n");
-	printf("------------------------------------------\n");
-	for (i=0; i<MAX_ENTRIES; i++) {
-		if (!strncmp(entries[i].magic, ENTRY_MAGIC, MAGIC_LEN)) {
-			printf("%-16s %#.8x     %#.8x\n", entries[i].name, entries[i].offset, entries[i].size);
-		}
-	}
-}*/
-
-/*int main(int argc, char **argv) {
-	char *var = NULL, *val = NULL;
-	if (argc < 2 || argc > 4) {
-		printf("usage: fw_setenv <var> [<var>]\n");
-		return -1;
-	}
-
-	var = argv[1];
-	if (argc > 2)
-		val = argv[2];
-
-	read_entries();
-	read_env();
-	set_env(var, val);
-
-	return 0;
 }
 
-int main2(int argc, char **argv) {
-	printf("********************************************************\n");
-	printf("                      NVRAM                             \n");
-	printf("********************************************************\n");
-	printf("\n");
-	read_entries();
-	print_entries();
+int print_tokens(char *tokens) {
+	struct token_header *header;
+	char *data;
 
-	printf("\n\n");
-	printf("********************************************************\n");
-	printf("                    Bootie Env                          \n");
-	printf("********************************************************\n");
-	printf("\n");
-	read_env();
-	print_env();
+	header = (struct token_header *)tokens;
+	data = tokens + sizeof (struct token_header);
 
-	return 0;
-}*/
+	while (header && !strncmp(header->magic, TOKEN_MAGIC, MAGIC_LEN)) {
+		printf("%s = %s\n", header->name, data);
+		header = (struct token_header *)(((int)header + header->length + sizeof(struct token_header) + 3) & ~3);
+		data = (char *)header + sizeof(struct token_header);
+	}
+}
 
-void usage() {
+void print_usage() {
 	printf("usage: bootie-config [options]\n");
 	printf("\t--get, -g   get env\n");
 	printf("\t--set, -s   set env\n");
 }
 
-int main (int argc, char *argv[])
-{
-	opterr = 0;
+int main (int argc, char *argv[]) {
+
 	int option_index;
 	int chr;
-	char input_name[255];
-	char output_name[255];
-	input_name[0] = '\0';
-	uint8_t in_data[0x40000];
-	int fd;
-
-	snprintf(input_name, 255, DEFAULT_TOKEN_INPUT);
 
 	struct option opts[] = {
-		{ "help", no_argument, 0, 'h' },
-		{ "get", required_argument, 0, 'g' },
-		{ "set", required_argument, 0, 's' },
+			{ "help", no_argument, 0, 'h' },
 	};
 
 	while (1) {
 		option_index = 0;
-		chr = getopt_long(argc, argv, "g:s:h", opts, &option_index);
+		chr = getopt_long(argc, argv, "h", opts, &option_index);
 
 		if (chr == -1)
 			break;
 
 		switch (chr) {
-		case 'g':
-			/* get env */
-			break;
-		case 'o':
-			/* set env */
-			break;
 		case 'h':
-			usage();
+			print_usage();
 			return 0;
 		default:
 			break;
 		}
 	}
+
+	uint32_t size;
+	struct nvram_entry entries[MAX_ENTRIES];
+	read_entries(entries);
+
+	print_entries(entries);
+
+	char *environment = read_entry("env", &size, entries);
+	print_env(environment, size);
+	free(environment);
+
+	char *tokens = read_entry("tokens", &size, entries);
+	print_tokens(tokens);
+	free(tokens);
 
 	return 0;
 }
