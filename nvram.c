@@ -158,7 +158,7 @@ int set_env(char *newvar, char *newval, struct nvram_entry *entries) {
 
 	WRITE_FLASH:
 
-	write_env(env, &entries[find_entry("env", entries)]);
+	write_env(environment, &entries[find_entry("env", entries)]);
 	free(environment);
 
 	return 0;
