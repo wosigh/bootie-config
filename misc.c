@@ -20,20 +20,6 @@ int print_entries(struct nvram_entry *entries) {
 int print_env(char *environment, uint32_t size) {
 	char *env = NULL, *nxt = NULL;
 
-	if (!environment) {
-		fprintf(stderr, "Error: environment not read\n");
-		return -1;
-	}
-
-	for (env = environment; *env; env = nxt + 1) {
-		for (nxt = env; *nxt; nxt++) {
-			if (nxt >= size) {
-				fprintf(stderr, "## Error: environment not terminated\n");
-				return -1;
-			}
-		}
-	}
-
 	env = environment;
 	while (*env) {
 		printf("%s = %s\n", env, env + strlen(env) + 1);
@@ -60,16 +46,21 @@ int print_tokens(char *tokens) {
 
 void print_usage() {
 	printf("usage: bootie-config [options]\n");
-	printf("\t--get, -g   get env\n");
-	printf("\t--set, -s   set env\n");
+	printf("\t--print-nvram\t\tPrints the NVRAM layout\n");
+	printf("\t--print-env\t\tPrints Bootie's env\n");
+	printf("\t--print-tokens\t\tPrints Bootie's tokens\n");
 }
 
 int main (int argc, char *argv[]) {
 
 	int option_index;
 	int chr;
+	int print = 0;
 
 	struct option opts[] = {
+			{ "print-nvram", no_argument, &print, 1 },
+			{ "print-env", no_argument, &print, 2 },
+			{ "print-tokens", no_argument, &print, 3 },
 			{ "help", no_argument, 0, 'h' },
 	};
 
@@ -89,19 +80,31 @@ int main (int argc, char *argv[]) {
 		}
 	}
 
-	uint32_t size;
-	struct nvram_entry entries[MAX_ENTRIES];
-	read_entries(entries);
+	if (print) {
+		uint32_t size;
+		struct nvram_entry entries[MAX_ENTRIES];
+		read_entries(entries);
 
-	print_entries(entries);
-
-	char *environment = read_entry("env", &size, entries);
-	print_env(environment, size);
-	free(environment);
-
-	char *tokens = read_entry("tokens", &size, entries);
-	print_tokens(tokens);
-	free(tokens);
+		switch (print) {
+		case 1:
+			print_entries(entries);
+			break;
+		case 2: {
+			char *environment = read_entry("env", &size, entries);
+			print_env(environment, size);
+			free(environment);
+			break;
+		}
+		case 3: {
+			char *tokens = read_entry("tokens", &size, entries);
+			print_tokens(tokens);
+			free(tokens);
+			break;
+		}
+		}
+	} else {
+		print_usage();
+	}
 
 	return 0;
 }
