@@ -11,6 +11,17 @@
 #define NAME_LEN 16
 #define MAGIC_LEN 4
 
+enum {
+  OPT_NONE,
+  PRINT_ALL,
+  PRINT_ENTRIES,
+  PRINT_ENV,
+  PRINT_TOKENS,
+  SET_ENV,
+  CLEAR_ENV,
+  SET_TOKENS
+};
+
 struct nvram_header {
   char magic[MAGIC_LEN]; // NVRM
   uint32_t version;

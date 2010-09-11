@@ -1,2 +1,5 @@
 bootie-config
 *.o
+*.swp
+*.swo
+*.swn

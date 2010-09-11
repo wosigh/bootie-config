@@ -1,5 +1,5 @@
 CFLAGS		:=	-g -pedantic -std=c99
-LDFLAGS		:=	-L$(ROOT)${prefix}/lib -Wl,-rpath-link,$(ROOT)${prefix}/lib -Wl,--allow-shlib-undefined
+LDFLAGS		:=	-L$(ROOT)${prefix}/lib -Wl,-rpath-link,$(ROOT)${prefix}/lib -Wl,--allow-shlib-undefined -L. -lz
 SOURCES		:=	nvram.c misc.c
 OBJECTS		:=	$(SOURCES:.c=.o)
 EXECUTABLE	:=	bootie-config

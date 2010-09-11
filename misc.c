@@ -54,15 +54,37 @@ int print_tokens(struct nvram_entry *entries) {
 	return 0;
 }
 
+int print_all(struct nvram_entry *entries) {
+  printf("********************************************************\n");
+  printf("                      NVRAM                             \n");
+  printf("********************************************************\n");
+  printf("\n");
+  print_entries(entries);
+
+  printf("\n\n");
+  printf("********************************************************\n");
+  printf("                    Bootie Env                          \n");
+  printf("********************************************************\n");
+  printf("\n");
+  print_env(entries);
+
+  printf("\n\n");
+  printf("********************************************************\n");
+  printf("                      Tokens                            \n");
+  printf("********************************************************\n");
+  printf("\n");
+  print_tokens(entries);
+}
+
 void print_usage() {
 	printf("usage: bootie-config [options]\n");
-	printf("\t--print-nvram\t\tPrints the NVRAM layout\n");
-	printf("\t--print-env\t\tPrints Bootie's env\n");
-	printf("\t--print-tokens\t\tPrints Bootie's tokens\n");
-	printf("\n\t--set-env\t\tSet Bootie env var\n");
-	//printf("\t--set-token\t\tSet Bootie token\n");
-	printf("\n\t-k, --key\t\tkey\n");
-	printf("\t-v, --value\t\tvalue\n");
+  printf("\t--print-all\t\tPrints NVRAM headers, tokens and bootie env\n");
+	printf("\t--print-nvram\t\t\tPrints the NVRAM layout\n");
+	printf("\t--print-env\t\t\tPrints Bootie's env\n");
+	printf("\t--print-tokens\t\t\tPrints Bootie's tokens\n");
+	printf("\n\t--set-env <key> [<value>]\t\tSet Bootie env var\n");
+  printf("\t--clear-env\t\t\tClear Bootie env\n");
+	printf("\t--set-token <key> [<value>]\t\tSet Bootie token\n");
 }
 
 int main (int argc, char *argv[]) {
@@ -74,20 +96,20 @@ int main (int argc, char *argv[]) {
 	char *value = 0;
 
 	struct option opts[] = {
-			{ "print-nvram", no_argument, &action, 1 },
-			{ "print-env", no_argument, &action, 2 },
-			{ "print-tokens", no_argument, &action, 3 },
-			{ "set-env", no_argument, &action, 4 },
-			{ "set-token", no_argument, &action, 5 },
+			{ "print-all", no_argument, &action, PRINT_ALL },
+			{ "print-nvram", no_argument, &action, PRINT_ENTRIES },
+			{ "print-env", no_argument, &action, PRINT_ENV },
+			{ "print-tokens", no_argument, &action, PRINT_TOKENS },
+			{ "set-env", required_argument, &action, SET_ENV },
+			{ "clear-env", no_argument, &action, CLEAR_ENV },
+			{ "set-token", required_argument, &action, SET_TOKENS },
 			{ "help", no_argument, 0, 'h' },
-			{ "key", required_argument, 0, 'k'},
-			{ "value", required_argument, 0, 'v'},
 			{0, 0, 0, 0}
 	};
 
 	while (1) {
 		option_index = 0;
-		chr = getopt_long(argc, argv, "ht:k:v:", opts, &option_index);
+		chr = getopt_long(argc, argv, "h", opts, &option_index);
 
 		if (chr == -1)
 			break;
@@ -96,12 +118,13 @@ int main (int argc, char *argv[]) {
 		case 'h':
 			print_usage();
 			return 0;
-		case 'k':
-			key = optarg;
-			break;
-		case 'v':
-			value = optarg;
-			break;
+    case 0:
+      if (action == SET_ENV || action == SET_TOKENS) {
+        key = optarg;
+        if (optind < argc && argv[optind][0] != '-') {
+          value = argv[optind];
+        }
+      }
 		default:
 			break;
 		}
@@ -112,21 +135,27 @@ int main (int argc, char *argv[]) {
 		read_entries(entries);
 
 		switch (action) {
-		case 1:
+		case PRINT_ALL:
+			print_all(entries);
+			break;
+		case PRINT_ENTRIES:
 			print_entries(entries);
 			break;
-		case 2:
+		case PRINT_ENV:
 			print_env(entries);
 			break;
-		case 3:
+		case PRINT_TOKENS:
 			print_tokens(entries);
 			break;
-		case 4:
+		case SET_ENV:
 			set_env(key, value, entries);
 			break;
-		/*case 5:
-			set_tokens(key, value, entries);
-			break;*/
+		case SET_TOKENS:
+			set_token(key, value, entries);
+			break;
+    case CLEAR_ENV:
+      printf("clear-env not implemented yet\n");
+      break;
 		}
 	}
   else {
