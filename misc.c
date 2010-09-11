@@ -45,7 +45,7 @@ int print_tokens(struct nvram_entry *entries) {
 	data = tokens + sizeof (struct token_header);
 
 	while (header && !strncmp(header->magic, TOKEN_MAGIC, MAGIC_LEN)) {
-		printf("%s = %s\n", header->name, data);
+		printf("%s = %.*s\n", header->name, header->length, data);
 		header = (struct token_header *)(((int)header + header->length + sizeof(struct token_header) + 3) & ~3);
 		data = (char *)header + sizeof(struct token_header);
 	}
@@ -129,6 +129,8 @@ int main (int argc, char *argv[]) {
 			break;*/
 		}
 	}
-
+  else {
+    print_usage();
+  }
 	return 0;
 }

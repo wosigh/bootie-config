@@ -113,14 +113,32 @@ int set_env(char *newvar, char *newval, struct nvram_entry *entries) {
 	int count = 0;
 	char *env = NULL, *nxt = NULL;
 
-	if (!newvar || !newval) {
+	if (!newvar) {
 		return -1;
 	}
 
 	char *environment = read_entry("env", &size, entries);
 
+  if (!environment) {
+    fprintf(stderr, "Environment not read\n");
+    return -1;
+  }
+
 	for (env = environment; *env; env = nxt, count++) {
-		nxt++;
+    for (nxt = env; *nxt; nxt++) {
+      if (nxt >= &environment[size]) {
+        fprintf(stderr, "Error: environment not terminated\n");
+        return -1;
+      }
+    };
+    for (nxt++; *nxt; nxt++) {
+      if (nxt >= &environment[size]) {
+        fprintf(stderr, "Error: environment not terminated\n");
+        return -1;
+      }
+    };
+    nxt++;
+
 		if (!strcmp(env, newvar)) {
 			memcpy(env, nxt, &env[size] - nxt);
 		}
@@ -142,7 +160,6 @@ int set_env(char *newvar, char *newval, struct nvram_entry *entries) {
 
 	write_env(env, &entries[find_entry("env", entries)]);
 	free(environment);
-	free(env);
 
 	return 0;
 }
