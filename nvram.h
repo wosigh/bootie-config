@@ -44,6 +44,6 @@ struct token {
 int read_entries(struct nvram_entry *entries);
 int find_entry(char *name, struct nvram_entry *entries);
 char * read_entry(char *entry, uint32_t *size, struct nvram_entry *entries);
-int set_env(char *newvar, char *newval);
+int set_env(char *newvar, char *newval, struct nvram_entry *entries);
 
 #endif /* NVRAM_H_ */

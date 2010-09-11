@@ -86,41 +86,63 @@ char * read_entry(char *entry, uint32_t *size, struct nvram_entry *entries) {
 	return environment;
 }
 
-int read_tokens(char *tokens, struct nvram_entry *entries) {
-	int fd;
-	int count = 0;
-	struct token_header header;
+int write_env(char *environment, struct nvram_entry *entry) {
+	int fd, count;
 
-	fd = open(DEVICE, O_RDONLY);
+	fd = open(DEVICE, O_WRONLY);
 	if (fd < 0) {
-		fprintf(stderr, "Could not open %s for reading\n", DEVICE);
+		fprintf(stderr, "Could not open %s for writing\n", DEVICE);
 		return -1;
 	}
 
-	int e = find_entry("tokens", entries);
-
-	if (!entries[e].offset || !entries[e].size) {
-		fprintf(stderr, "Could not find tokens offset 0x%x, size 0x%x\n", entries[e].offset, entries[e].size);
-		return -1;
-	}
-
-	memalign(4, entries[e].size);
-	if (!tokens) {
-		fprintf(stderr, "Error: Memory allocation failed\n");
+	printf("Writing environment to nvram...\n");
+	lseek(fd, entry->offset, SEEK_SET);
+	count = write(fd, environment, entry->size);
+	if (count != entry->size) {
+		fprintf(stderr, "Error: write returned %d\n", count);
 		close(fd);
-		return -1;
-	}
-
-	lseek(fd, entries[e].offset, SEEK_SET);
-	count = read(fd, tokens, entries[e].size);
-	if (count != entries[e].size) {
-		fprintf(stderr, "Error: read returned %d\n", count);
-		free(tokens);
-		close(fd);
-		tokens = NULL;
 		return -1;
 	}
 
 	close(fd);
+	return 0;
+}
+
+int set_env(char *newvar, char *newval, struct nvram_entry *entries) {
+	uint32_t size;
+	int count = 0;
+	char *env = NULL, *nxt = NULL;
+
+	if (!newvar || !newval) {
+		return -1;
+	}
+
+	char *environment = read_entry("env", &size, entries);
+
+	for (env = environment; *env; env = nxt, count++) {
+		nxt++;
+		if (!strcmp(env, newvar)) {
+			memcpy(env, nxt, &env[size] - nxt);
+		}
+	}
+
+	if (!newval)
+		goto WRITE_FLASH;
+
+	if ((nxt + strlen(newvar) + strlen(newval) + 3) >= &environment[size]) {
+		fprintf(stderr, "Error: newvar will not fit.\n");
+		return -1;
+	}
+
+	strcpy(nxt, newvar);
+	nxt += strlen(nxt) + 1;
+	strcpy(nxt, newval);
+
+	WRITE_FLASH:
+
+	write_env(env, &entries[find_entry("env", entries)]);
+	free(environment);
+	free(env);
+
 	return 0;
 }
