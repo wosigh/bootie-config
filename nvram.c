@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <malloc.h>
 #include "nvram.h"
 
 int read_entries(struct nvram_entry *entries) {
@@ -142,7 +143,7 @@ int set_env(char *newvar, char *newval, struct nvram_entry *entries) {
     nxt++;
 
 		if (!strcmp(env, newvar)) {
-			memcpy(env, nxt, &env[size] - nxt);
+			memmove(env, nxt, &environment[size] - nxt);
 		}
 	}
 
@@ -183,7 +184,7 @@ int dbg_print_tokens(char *tokens) {
 int set_token(char *var, char *val, struct nvram_entry *entries) {
   char *new_tokens = NULL;
   char *ptr = NULL;
-  unsigned long size = 0, length = 0;
+  uint32_t size = 0, length = 0;
   int fd;
   int found = 0;
 
