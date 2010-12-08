@@ -89,7 +89,7 @@ char * read_entry(char *entry, uint32_t *size, struct nvram_entry *entries) {
 	return nvram;
 }
 
-int write_env(char *environment, struct nvram_entry *entry) {
+int write_nvram(char *data, struct nvram_entry *entry) {
 	int fd, count;
 
 	fd = open(DEVICE, O_WRONLY);
@@ -98,9 +98,9 @@ int write_env(char *environment, struct nvram_entry *entry) {
 		return -1;
 	}
 
-	printf("Writing environment to nvram...\n");
+	printf("Writing %s to nvram...\n", entry->name);
 	lseek(fd, entry->offset, SEEK_SET);
-	count = write(fd, environment, entry->size);
+	count = write(fd, data, entry->size);
 	if (count != entry->size) {
 		fprintf(stderr, "Error: write returned %d\n", count);
 		close(fd);
@@ -161,7 +161,7 @@ int set_env(char *newvar, char *newval, struct nvram_entry *entries) {
 
 	WRITE_FLASH:
 
-	write_env(environment, &entries[find_entry("env", entries)]);
+	write_nvram(environment, &entries[find_entry("env", entries)]);
 	free(environment);
 
 	return 0;
@@ -239,7 +239,7 @@ int set_token(char *var, char *val, struct nvram_entry *entries) {
           free(new_tokens);
           return -1;
         }
-        length += ((new_header->length + 3) & ~3);
+        length += new_header->length;
         memcpy(new_header+1, val, new_header->length);
         new_header->crc = crc32(0, new_header, length);
       }
@@ -276,11 +276,11 @@ int set_token(char *var, char *val, struct nvram_entry *entries) {
     new_header->crc = crc32(0, new_header, length);
   }
 
-#define DEBUG
+#undef DEBUG
 #ifdef DEBUG
   dbg_print_tokens(new_tokens);
 #else
-  write_tokens(new_tokens);
+  write_nvram(new_tokens, &entries[find_entry("tokens", entries)]);
 #endif
   free(new_tokens);
   free(tokens);
