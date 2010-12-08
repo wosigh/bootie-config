@@ -97,14 +97,15 @@ int print_all(struct nvram_entry *entries) {
 
 void print_usage() {
 	printf("usage: bootie-config [options]\n");
-  printf("\t--print-all\t\tPrints NVRAM headers, tokens and bootie env\n");
+  printf("\t--print-all\t\t\tPrints NVRAM headers, tokens and bootie env\n");
 	printf("\t--print-nvram\t\t\tPrints the NVRAM layout\n");
 	printf("\t--print-env\t\t\tPrints Bootie's env\n");
 	printf("\t--print-tokens\t\t\tPrints Bootie's tokens\n");
 	printf("\t--print-backup\t\t\tPrints Bootie's backup tokens\n");
-	printf("\n\t--set-env <key> [<value>]\t\tSet Bootie env var\n");
+	printf("\n\t--set-env <key> [<value>]\tSet Bootie env var\n");
   printf("\t--clear-env\t\t\tClear Bootie env\n");
-	printf("\t--set-token <key> [<value>]\t\tSet Bootie token\n");
+	printf("\t--set-token <key> [<value>]\tSet Bootie token\n");
+  printf("\t--restore-tokens\t\tRestore tokens from backups\n");
 }
 
 int main (int argc, char *argv[]) {
@@ -124,6 +125,7 @@ int main (int argc, char *argv[]) {
 			{ "set-env", required_argument, &action, SET_ENV },
 			{ "clear-env", no_argument, &action, CLEAR_ENV },
 			{ "set-token", required_argument, &action, SET_TOKENS },
+			{ "restore-tokens", no_argument, &action, RESTORE_TOKENS },
 			{ "help", no_argument, 0, 'h' },
 			{0, 0, 0, 0}
 	};
@@ -176,6 +178,9 @@ int main (int argc, char *argv[]) {
 			break;
 		case SET_TOKENS:
 			set_token(key, value, entries);
+			break;
+		case RESTORE_TOKENS:
+			restore_tokens(entries);
 			break;
     case CLEAR_ENV:
       printf("clear-env not implemented yet\n");

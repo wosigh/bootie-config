@@ -20,7 +20,8 @@ enum {
   PRINT_BACKUP_TOKENS,
   SET_ENV,
   CLEAR_ENV,
-  SET_TOKENS
+  SET_TOKENS,
+  RESTORE_TOKENS
 };
 
 struct nvram_header {
