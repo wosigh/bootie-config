@@ -54,6 +54,25 @@ int print_tokens(struct nvram_entry *entries) {
 	return 0;
 }
 
+int print_backup_tokens(struct nvram_entry *entries) {
+	uint32_t size;
+	struct token_header *header;
+	char *data;
+	char *tokens = read_entry("token-backup", &size, entries);
+
+	header = (struct token_header *)tokens;
+	data = tokens + sizeof (struct token_header);
+
+	while (header && !strncmp(header->magic, TOKEN_MAGIC, MAGIC_LEN)) {
+		printf("%s = %.*s\n", header->name, header->length, data);
+		header = (struct token_header *)(((int)header + header->length + sizeof(struct token_header) + 3) & ~3);
+		data = (char *)header + sizeof(struct token_header);
+	}
+	free(tokens);
+
+	return 0;
+}
+
 int print_all(struct nvram_entry *entries) {
   printf("********************************************************\n");
   printf("                      NVRAM                             \n");
@@ -82,6 +101,7 @@ void print_usage() {
 	printf("\t--print-nvram\t\t\tPrints the NVRAM layout\n");
 	printf("\t--print-env\t\t\tPrints Bootie's env\n");
 	printf("\t--print-tokens\t\t\tPrints Bootie's tokens\n");
+	printf("\t--print-backup\t\t\tPrints Bootie's backup tokens\n");
 	printf("\n\t--set-env <key> [<value>]\t\tSet Bootie env var\n");
   printf("\t--clear-env\t\t\tClear Bootie env\n");
 	printf("\t--set-token <key> [<value>]\t\tSet Bootie token\n");
@@ -100,6 +120,7 @@ int main (int argc, char *argv[]) {
 			{ "print-nvram", no_argument, &action, PRINT_ENTRIES },
 			{ "print-env", no_argument, &action, PRINT_ENV },
 			{ "print-tokens", no_argument, &action, PRINT_TOKENS },
+			{ "print-backup", no_argument, &action, PRINT_BACKUP_TOKENS },
 			{ "set-env", required_argument, &action, SET_ENV },
 			{ "clear-env", no_argument, &action, CLEAR_ENV },
 			{ "set-token", required_argument, &action, SET_TOKENS },
@@ -146,6 +167,9 @@ int main (int argc, char *argv[]) {
 			break;
 		case PRINT_TOKENS:
 			print_tokens(entries);
+			break;
+		case PRINT_BACKUP_TOKENS:
+			print_backup_tokens(entries);
 			break;
 		case SET_ENV:
 			set_env(key, value, entries);

@@ -242,6 +242,7 @@ int set_token(char *var, char *val, struct nvram_entry *entries) {
         length += new_header->length;
         memcpy(new_header+1, val, new_header->length);
         new_header->crc = crc32(0, new_header, length);
+        length = (length + 3) & ~3;
       }
       else {
         length = 0;
@@ -268,7 +269,7 @@ int set_token(char *var, char *val, struct nvram_entry *entries) {
     strcpy(new_header->magic, "TOKN");
     new_header->version = 1;
     new_header->length = strlen(val);
-    new_header->gen = 0;
+    new_header->gen = 1;
     new_header->crc = 0;
     strcpy(new_header->name, var);
     memcpy(new_header+1, val, (new_header->length + 3) & ~3);
