@@ -6,10 +6,12 @@
 #define NVRAM_MAGIC "NVRM"
 #define ENTRY_MAGIC "TOC1"
 #define TOKEN_MAGIC "TOKN"
-#define DEVICE "/dev/mmcblk0p1"
+#define DEVICE "/dev/mmcblk0p12"
 #define MAX_ENTRIES 127
 #define NAME_LEN 16
 #define MAGIC_LEN 4
+#define MOUNT_PATH "/tmp/tokens"
+#define DEV_PATH "/dev/tokens"
 
 enum {
   OPT_NONE,
@@ -21,7 +23,8 @@ enum {
   SET_ENV,
   CLEAR_ENV,
   SET_TOKENS,
-  RESTORE_TOKENS
+  RESTORE_TOKENS,
+  MOUNT_TOKENS
 };
 
 struct nvram_header {
@@ -59,5 +62,6 @@ int find_entry(char *name, struct nvram_entry *entries);
 char * read_entry(char *entry, uint32_t *size, struct nvram_entry *entries);
 int set_env(char *newvar, char *newval, struct nvram_entry *entries);
 int set_token(char *, char *, struct nvram_entry *);
+int write_token_file(char tokendata[], char tokenname[]);
 
 #endif /* NVRAM_H_ */

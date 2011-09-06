@@ -289,19 +289,19 @@ int set_token(char *var, char *val, struct nvram_entry *entries) {
 }
 
 int restore_tokens(struct nvram_entry *entries) {
-  int ret = 0;
+	int ret = 0;
 	char *backup = NULL;
-  int32_t size = 0;
+	int32_t size = 0;
  
-  backup = read_entry("token-backup", &size, entries);
+	backup = read_entry("token-backup", &size, entries);
 
-  if (!backup) {
-    fprintf(stderr, "Failed to read backup tokens\n");
-    return -1;
-  }
+	if (!backup) {
+		fprintf(stderr, "Failed to read backup tokens\n");
+		return -1;
+	}
 
-  ret = write_nvram(backup, &entries[find_entry("tokens", entries)]);
+	ret = write_nvram(backup, &entries[find_entry("tokens", entries)]);
 
-  free(backup);
-  return ret;
+	free(backup);
+	return ret;
 }
